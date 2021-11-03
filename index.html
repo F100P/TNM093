@@ -277,18 +277,23 @@ const volumeRenderingFragmentSource = `#version 300 es
           color.a = 1.0 - pow(1.0 - color.a, tIncr * ReferenceSamplingInterval);
 
           //
-          //   @TODO: Implement the front-to-back compositing here
+          //   
           //
-
+          result.rgb = (1.0 - result.a) * color.rgb * color.a + result.rgb;
+          result.a = (1.0 - result.a) * color.a + result.a;
 
 
 
         }
         else if (compositingMethod == CompositingMethodFirstHitPoint) {
           //
-          //   @TODO: Implement the first hitpoint compositing here
+          //   
           //
 
+          float threshold = 0.5;
+          if(color.a > threshold){
+            return color;
+          }
 
 
 
@@ -296,9 +301,11 @@ const volumeRenderingFragmentSource = `#version 300 es
         }
         else if (compositingMethod == CompositingMethodMaximumIntensityProjection) {
           //
-          //   @TODO: Implement the maximum-intensity projection here
+          //   
           //
-
+          if(color.a > result.a){
+            return color;
+          }
 
 
 
@@ -473,6 +480,13 @@ function updateTransferFunction(gl, transferFunction) {
   // the image.  The remainder of the ramp is just using different angles for the color
   // components
   const cutoff = 50;
+  const span_red = 84*4;
+  const span_blue = 137*4;
+  const span_green = 260*4;
+  //peak på 43, 84 och 137
+  const range_blue = 50;
+  const range_red = 50;
+  const range_green = 50;
 
   for (let i = 0; i < cutoff * 4; i += 4) {
     // Set RGBA all to 0
@@ -484,14 +498,29 @@ function updateTransferFunction(gl, transferFunction) {
 
   // For now, just create a linear ramp from 0 to 1. We start at the cutoff value and fill
   // the rest of the array
-  for (let i = cutoff * 4; i < 256 * 4; i += 4) {
+  for (let i = cutoff*4; i < data.length-4 ; i+=4) {
     // convert i into a value [0, 256] and set it 
-    const it = i / 4;
-    data[i] = 2 * it;
-    data[i + 1] = it;
-    data[i + 2] = 3 * it;
-    data[i + 3] = it;
+    if (i>span_red-range_red && i<span_red+range_red){
+    data[i] = 255;
+    data[i+1] = 0;
+    data[i+2] = 0;
+    data[i+3] = 50;}
+    
+    else if (i<span_blue+range_blue && i>span_blue-range_blue){
+    data[i] = 0;
+    data[i+1] = 0;
+    data[i+2] = 255;
+    data[i+3] = 50;}
+
+    else if (i<span_green+range_green && i>span_green-range_green){
+    data[i] = 0;
+    data[i+1] = 255;
+    data[i+2] = 0;
+    data[i+3] = 255;}
   }
+ 
+  
+  plotData(data);
 
   /// End of the provided transfer function
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -503,7 +532,33 @@ function updateTransferFunction(gl, transferFunction) {
   console.log(117, "Updating the transfer function texture");
   gl.bindTexture(gl.TEXTURE_2D, transferFunction);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 256, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
-}
+
+};
+
+function plotData(data) {
+  var canvas = document.getElementById("myCanvas");
+  var theContext = canvas.getContext("2d");
+ 
+  var value = data.length/4;
+  var opacity = [];
+  
+  for (let i = 3; i< data.length ; i+=4){
+    
+      
+      opacity[(i+1)/4] = data[i];
+   }
+   console.log(opacity);
+   
+   var offset = (1 / (opacity.length - 1)) * value;
+  theContext.strokeRect(0, 0, value, opacity.length)
+
+  theContext.beginPath();
+  theContext.moveTo(0, opacity[0]);
+  for (var x = 1; x < opacity.length; x++) {
+    theContext.lineTo(x * offset, 100 - opacity[x]);
+  }
+  theContext.stroke();
+};
 
 
 
@@ -857,7 +912,34 @@ async function main() {
       // [0, 256) manually
       convertedData[i] = typedData[i] / 4096.0 * 256.0
     }
-    
+    plotPigData(convertedData);
+    function plotPigData(convertedData) {
+      
+  var canvas = document.getElementById("pigFacts");
+  var theContext = canvas.getContext("2d");
+ 
+  var value = 256;
+  var numberOfTimes = new Array(value).fill(0);
+
+  
+  for (let i = 0; i< convertedData.length ; i++){
+      numberOfTimes[convertedData[i]]++
+   }
+   
+  for (let i = 0 ; i < numberOfTimes.length ; i++){
+    numberOfTimes[i] = Math.log(numberOfTimes[i])*5;
+  }
+   
+   var offset = (1 / (numberOfTimes.length - 1)) * value;
+  theContext.strokeRect(0, 0, value, Math.max(numberOfTimes))
+  console.log(numberOfTimes)
+  theContext.beginPath();
+  theContext.moveTo(0, numberOfTimes[0]);
+  for (var x = 1; x < numberOfTimes.length; x++) {
+    theContext.lineTo(x * offset, 256 - numberOfTimes[x]);
+  }
+  theContext.stroke();
+};
 
     // The volume size also comes from the available meta data for the pig.raw
     // if you want to have a look at the metadata, the pig.dat contains that
@@ -910,6 +992,7 @@ async function main() {
     // representation and upload to the texture
     if (TransferFunctionIsDirty) {
       updateTransferFunction(gl, transferFunctionTexture);
+      
       TransferFunctionIsDirty = false;
 
       // If we update the transfer function, that also implies that the rendering has
@@ -1000,6 +1083,10 @@ function postError(msg) {
 <body onload="main();">
   <p id="error"></p>
   <canvas id="glCanvas" width="640" height="480"></canvas>
+  <canvas id="myCanvas" width="600" height="600" style="border: 1px solid #ddd;">Your browser does not support the HTML5 canvas tag
+  </canvas>
+  <canvas id="pigFacts" width="600" height="600" style="border: 1px solid #ddd;">Your browser does not support the HTML5 canvas tag
+  </canvas>
   <p>
     Rendering parameters
     <div>Step size: <input type="range" min="10" max="10000" value="1000" class="slider" id="stepSize" oninput="triggerRendering();"> </div>
