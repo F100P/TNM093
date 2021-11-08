@@ -453,6 +453,8 @@ function updateTransferFunction(gl, transferFunction) {
   // function.  Each value is stored sequentially (RGBA,RGBA,RGBA,...) for 256 values,
   // which get mapped to [0, 1] by OpenGL
   let data = new Uint8Array(256 * 4);
+  let data2 = new Uint8Array(256 * 4);
+  let data3 = new Uint8Array(256 * 4);
 
 
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -473,15 +475,39 @@ function updateTransferFunction(gl, transferFunction) {
  
 
   //Get the user-input.
-  const userOpacity = document.getElementById("alpha").value;  //get the value of alpha (80 default) 
-  const userRed = document.getElementById("red").value;        //get the value of red   (255 default)  
-  const userGreen = document.getElementById("green").value;    //get the value of green (215 default)  
-  const userBlue = document.getElementById("blue").value;      //get the value of blue  (100 default)
+  const userOpacity1 = document.getElementById("alpha1").value;  //get the value of alpha (80 default) 
+  const userRed1 = document.getElementById("red1").value;        //get the value of red   (255 default)  
+  const userGreen1 = document.getElementById("green1").value;    //get the value of green (215 default)  
+  const userBlue1 = document.getElementById("blue1").value;      //get the value of blue  (100 default)
   const userSpan1 = document.getElementById("span1").value;
   const userRange1 = document.getElementById("range1").value;
-  const userRoof = document.getElementById("roof1").value;
+  const userRoof1 = document.getElementById("roof1").value;
+
+  const userOpacity2 = document.getElementById("alpha2").value;  //get the value of alpha (80 default) 
+  const userRed2 = document.getElementById("red2").value;        //get the value of red   (255 default)  
+  const userGreen2 = document.getElementById("green2").value;    //get the value of green (215 default)  
+  const userBlue2 = document.getElementById("blue2").value;      //get the value of blue  (100 default)
+  const userSpan2 = document.getElementById("span2").value;
+  const userRange2 = document.getElementById("range2").value;
+  const userRoof2 = document.getElementById("roof2").value;
+
+  const userOpacity3 = document.getElementById("alpha3").value;  //get the value of alpha (80 default) 
+  const userRed3 = document.getElementById("red3").value;        //get the value of red   (255 default)  
+  const userGreen3 = document.getElementById("green3").value;    //get the value of green (215 default)  
+  const userBlue3 = document.getElementById("blue3").value;      //get the value of blue  (100 default)
+  const userSpan3 = document.getElementById("span3").value;
+  const userRange3 = document.getElementById("range3").value;
+  const userRoof3 = document.getElementById("roof3").value;
   
-  
+  function isItLarger(value1, value2){
+    if(value1>value2){
+      return value1;
+    }
+    else if (value2>value1){
+      return value2;
+    }
+    
+  }
 
   for (let i = 0; i < cutoff * 4; i += 4) {
     // Set RGBA all to 0 (this is unwanted)
@@ -490,51 +516,58 @@ function updateTransferFunction(gl, transferFunction) {
     data[i + 2] = 0;
     data[i + 3] = 0;
   }
-
+  
   // For now, just create a linear ramp from 0 to 1. We start at the cutoff value and fill
   // the rest of the array
   for (let i = cutoff * 4; i < data.length - 4 ; i += 4) {
     // Set the data to gold for the given interval.
     if (i > userSpan1*4 - userRange1*4 && i < userSpan1*4+userRange1*4){
-    data[i] = userRed;        //let the user adjust the red-chanel.
-    data[i + 1] = userGreen;  //let the user adjust the green-chanel.
-    data[i + 2] = 0;
-    data[i + 3] = userOpacity;//let the user adjust the opacity-chanel.
-    if( i != userSpan1*4){ //NÅGOT MySKO HÄR!
-      
-      if ( i < (userSpan1*4-userRoof) ){
-      
-    
-      data[i + 3] -= userOpacity*((Math.abs((i-((userSpan1*4)-userRoof))/((userRange1*4)-userRoof)))); //let the user adjust the opacity-chanel.
+      data[i] = userRed1;        //let the user adjust the red-chanel.
+      data[i + 1] = userGreen1;  //let the user adjust the green-chanel.
+      data[i + 2] = userBlue1;
+      data[i + 3] = userOpacity1;//let the user adjust the opacity-chanel.
+    if( i != userSpan1*4){ //NÅGOT MySKO HÄR! 
+      if ( i < (userSpan1*4-userRoof1) ){
+        data[i + 3] -= userOpacity1*((Math.abs((i-((userSpan1*4)-userRoof1))/((userRange1*4)-userRoof1)))); //let the user adjust the opacity-chanel.
+        
       }
-      if ( i > ((userSpan1*4)-(-userRoof))){  
-    
-      data[i + 3] -= userOpacity*((Math.abs((i-((userSpan1*4)-(-userRoof)))/((userRange1*4)-userRoof)))); //let the user adjust the opacity-chanel.
+      if ( i > ((userSpan1*4)-(-userRoof1))){  
+        data[i + 3] -= userOpacity1*((Math.abs((i-((userSpan1*4)-(-userRoof1)))/((userRange1*4)-userRoof1)))); //let the user adjust the opacity-chanel.
+       
       }
     }
-
-    
-
-     
-    
     }
-   
     
-
-    // Set the data to pink for the given interval.
-    else if (i > span_pink - range_pink && i < span_pink + range_pink){
-    data[i] = 255;
-    data[i + 1] = 0;
-    data[i + 2] = 255;
-    data[i + 3] = 50 ;
+    // Set the data to gold for the given interval.
+    if (i > userSpan2*4 - userRange2*4 && i < userSpan2*4+userRange2*4){
+      data[i] = userRed2;        //let the user adjust the red-chanel.
+      data[i + 1] = userGreen2;  //let the user adjust the green-chanel.
+      data[i + 2] = userBlue2;
+      data[i + 3] = userOpacity2;//let the user adjust the opacity-chanel.
+    if( i != userSpan2*4){ //NÅGOT MySKO HÄR! 
+      if ( i < (userSpan2*4-userRoof2) ){
+        data[i + 3] -= userOpacity2*((Math.abs((i-((userSpan2*4)-userRoof2))/((userRange2*4)-userRoof2)))); //let the user adjust the opacity-chanel.
+      }
+      if ( i > ((userSpan2*4)-(-userRoof2))){  
+        data[i + 3] -= userOpacity2*((Math.abs((i-((userSpan2*4)-(-userRoof2)))/((userRange2*4)-userRoof2)))); //let the user adjust the opacity-chanel.
+      }
+    }
     }
 
     // Set the data to brown for the given interval.
-    else if (i > span_brown - range_brown && i < span_brown + range_brown){
-    data[i] = 160;
-    data[i + 1] = 82;
-    data[i + 2] = 45;
-    data[i + 3] = 240;
+    if (i > userSpan3*4 - userRange3*4 && i < userSpan3*4+userRange3*4){
+      data[i] = userRed3;        //let the user adjust the red-chanel.
+      data[i + 1] = userGreen3;  //let the user adjust the green-chanel.
+      data[i + 2] = userBlue3;
+      data[i + 3] = userOpacity3;//let the user adjust the opacity-chanel.
+    if( i != userSpan3*4){ //NÅGOT MySKO HÄR! 
+      if ( i < (userSpan3*4-userRoof3) ){
+        data[i + 3] -= userOpacity3*((Math.abs((i-((userSpan3*4)-userRoof3))/((userRange3*4)-userRoof3)))); //let the user adjust the opacity-chanel.
+      }
+      if ( i > ((userSpan3*4)-(-userRoof3))){  
+        data[i + 3] -= userOpacity3*((Math.abs((i-((userSpan3*4)-(-userRoof3)))/((userRange3*4)-userRoof3)))); //let the user adjust the opacity-chanel.
+      }
+    }
     }
   }
  
@@ -1099,13 +1132,19 @@ function postError(msg) {
 
 <body onload="main();">
   <p id="error"></p>
+  <div style="display:flex; flex-direction:row; ">
   <canvas id="glCanvas" width="640" height="480"></canvas>
-  <canvas id="myCanvas" width="280" height="250" style="border: 1px solid #ddd;">Your browser does not support the HTML5 canvas tag
+  <div style="display:flex; flex-direction:column; ">
+ 
+  <canvas id="pigFacts" width="280" height="240" style="border: 1px solid #ddd;">Your browser does not support the HTML5 canvas tag
   </canvas>
-  <canvas id="pigFacts" width="280" height="250" style="border: 1px solid #ddd;">Your browser does not support the HTML5 canvas tag
+  <canvas id="myCanvas" width="280" height="240" style="border: 1px solid #ddd;">Your browser does not support the HTML5 canvas tag
   </canvas>
+</div>
+</div>
   <div style="display:flex; flex-direction:row">
-  <div>
+    <div style="display:flex; flex-direction:column">
+  <div style="margin: 10px;">
     Rendering parameters
     <div>Step size: <input type="range" min="10" max="10000" value="1000" class="slider" id="stepSize" oninput="triggerRendering();"> </div>
     <div>
@@ -1115,14 +1154,14 @@ function postError(msg) {
       <div><input type="radio" name="compositing" value="mip" onchange="triggerRendering();">Maximum-intensity projection</div>
     </div>
   </div>
-  <div>
+  <div div style="margin: 10px;">
     Camera
       <div> r: <input type="range" min="0" max="100" value="50" class="slider" id="camera-r" oninput="triggerRendering();"></div>
       <div> phi: <input type="range" min="0" max="360" value="35" class="slider" id="camera-phi" oninput="triggerRendering();"></div>
       <div> theta: <input type="range" min="1" max="180" value="65" class="slider" id="camera-theta" oninput="triggerRendering();"></div>
   </div>
   
-  <div>
+  <div div style="margin: 10px;">
     Debugging
       <div>Rendering output:</div>
       <div><input type="radio" name="debug-output" value="volume" onchange="triggerRendering();" checked>Volume Rendering</div>
@@ -1133,21 +1172,39 @@ function postError(msg) {
       <div><input type="radio" name="debug-output" value="slice" onchange="triggerRendering();">Volume Slice</div>
       <div><input type="radio" name="debug-output" value="slice-transfer" onchange="triggerRendering();">Volume Slice with transfer function</div>
   </div>
-
+</div>
   <!--
     Add some UI elements here to modify the transfer function.  As mentioned above, you need to call the function 'triggerTransferFunctionUpdate' to trigger and update of the GPU representation of the transfer function texture.  If you don't call that function, no change will be visible.
   -->
   <div>
-    <div>Transferfunction input:</div>
-    <div>Opacity:<input type="range" min="0" max="255" value="80" class="slider" id="alpha" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Red:<input type="range" min="0" max="255" value="255" class="slider" id="red" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Green:<input type="range" min="0" max="255" value="215" class="slider" id="green" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Blue:<input type="range" min="0" max="255" value="100" class="slider" id="blue" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Widget 1:<input type="range" min="0" max="255" value="100" class="slider" id="span1" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Transferfunction input 1:</div>
+    <div>Opacity:<input type="range" min="0" max="255" value="80" class="slider" id="alpha1" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Red:<input type="range" min="0" max="255" value="0" class="slider" id="red1" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Green:<input type="range" min="0" max="255" value="0" class="slider" id="green1" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Blue:<input type="range" min="0" max="255" value="255" class="slider" id="blue1" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Widget 1:<input type="range" min="0" max="255" value="50" class="slider" id="span1" oninput="triggerTransferFunctionUpdate();"></div>
     <div>Range 1:<input type="range" min="0" max="120" value="5" class="slider" id="range1" oninput="triggerTransferFunctionUpdate();"></div>
     <div>Roof 1:<input type="range" min="1" max="120" value="5" class="slider" id="roof1" oninput="triggerTransferFunctionUpdate();"></div>
-    
-
+  </div>
+  <div>
+    <div>Transferfunction input 2:</div>
+    <div>Opacity:<input type="range" min="0" max="255" value="80" class="slider" id="alpha2" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Red:<input type="range" min="0" max="255" value="0" class="slider" id="red2" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Green:<input type="range" min="0" max="255" value="255" class="slider" id="green2" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Blue:<input type="range" min="0" max="255" value="0" class="slider" id="blue2" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Widget 1:<input type="range" min="0" max="255" value="84" class="slider" id="span2" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Range 1:<input type="range" min="0" max="120" value="5" class="slider" id="range2" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Roof 1:<input type="range" min="1" max="120" value="5" class="slider" id="roof2" oninput="triggerTransferFunctionUpdate();"></div>
+  </div>
+  <div>
+    <div>Transferfunction input 3:</div>
+    <div>Opacity:<input type="range" min="0" max="255" value="80" class="slider" id="alpha3" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Red:<input type="range" min="0" max="255" value="255" class="slider" id="red3" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Green:<input type="range" min="0" max="255" value="0" class="slider" id="green3" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Blue:<input type="range" min="0" max="255" value="0" class="slider" id="blue3" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Widget 1:<input type="range" min="0" max="255" value="138" class="slider" id="span3" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Range 1:<input type="range" min="0" max="120" value="5" class="slider" id="range3" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Roof 1:<input type="range" min="1" max="120" value="5" class="slider" id="roof3" oninput="triggerTransferFunctionUpdate();"></div>
   </div>
 </div>
 </body>
