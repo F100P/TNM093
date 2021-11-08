@@ -498,9 +498,11 @@ function updateTransferFunction(gl, transferFunction) {
 
   // For now, just create a linear ramp from 0 to 1. We start at the cutoff value and fill
   // the rest of the array
+  //bara en test
   for (let i = cutoff*4; i < data.length-4 ; i+=4) {
     // convert i into a value [0, 256] and set it 
     if (i>span_red-range_red && i<span_red+range_red){
+      //Lägg till så att värdet på opacity är baserat på den del av rangen
     data[i] = 255;
     data[i+1] = 0;
     data[i+2] = 0;
