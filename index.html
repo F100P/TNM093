@@ -453,6 +453,7 @@ function updateTransferFunction(gl, transferFunction) {
   // function.  Each value is stored sequentially (RGBA,RGBA,RGBA,...) for 256 values,
   // which get mapped to [0, 1] by OpenGL
   let data = new Uint8Array(256 * 4);
+  let data1 = new Uint8Array(256 * 4);
   let data2 = new Uint8Array(256 * 4);
   let data3 = new Uint8Array(256 * 4);
 
@@ -499,13 +500,16 @@ function updateTransferFunction(gl, transferFunction) {
   const userRange3 = document.getElementById("range3").value;
   const userRoof3 = document.getElementById("roof3").value;
   
-  function isItLarger(value1, value2){
-    if(value1>value2){
-      return value1;
+  //Funktion för att hitta största värdet bland 3 tal
+  function isItLarger(value1, value2, value3){
+    result = value1;
+    if(value2>result){
+      result = value2;
     }
-    else if (value2>value1){
-      return value2;
+    if (value3>result){
+      result =  value3;
     }
+    return result;
     
   }
 
@@ -522,17 +526,17 @@ function updateTransferFunction(gl, transferFunction) {
   for (let i = cutoff * 4; i < data.length - 4 ; i += 4) {
     // Set the data to gold for the given interval.
     if (i > userSpan1*4 - userRange1*4 && i < userSpan1*4+userRange1*4){
-      data[i] = userRed1;        //let the user adjust the red-chanel.
-      data[i + 1] = userGreen1;  //let the user adjust the green-chanel.
-      data[i + 2] = userBlue1;
-      data[i + 3] = userOpacity1;//let the user adjust the opacity-chanel.
+      data1[i] = userRed1;        //let the user adjust the red-chanel.
+      data1[i + 1] = userGreen1;  //let the user adjust the green-chanel.
+      data1[i + 2] = userBlue1;
+      data1[i + 3] = userOpacity1;//let the user adjust the opacity-chanel.
     if( i != userSpan1*4){ //NÅGOT MySKO HÄR! 
       if ( i < (userSpan1*4-userRoof1) ){
-        data[i + 3] -= userOpacity1*((Math.abs((i-((userSpan1*4)-userRoof1))/((userRange1*4)-userRoof1)))); //let the user adjust the opacity-chanel.
+        data1[i + 3] -= userOpacity1*((Math.abs((i-((userSpan1*4)-userRoof1))/((userRange1*4)-userRoof1)))); //let the user adjust the opacity-chanel.
         
       }
       if ( i > ((userSpan1*4)-(-userRoof1))){  
-        data[i + 3] -= userOpacity1*((Math.abs((i-((userSpan1*4)-(-userRoof1)))/((userRange1*4)-userRoof1)))); //let the user adjust the opacity-chanel.
+        data1[i + 3] -= userOpacity1*((Math.abs((i-((userSpan1*4)-(-userRoof1)))/((userRange1*4)-userRoof1)))); //let the user adjust the opacity-chanel.
        
       }
     }
@@ -540,36 +544,77 @@ function updateTransferFunction(gl, transferFunction) {
     
     // Set the data to gold for the given interval.
     if (i > userSpan2*4 - userRange2*4 && i < userSpan2*4+userRange2*4){
-      data[i] = userRed2;        //let the user adjust the red-chanel.
-      data[i + 1] = userGreen2;  //let the user adjust the green-chanel.
-      data[i + 2] = userBlue2;
-      data[i + 3] = userOpacity2;//let the user adjust the opacity-chanel.
+      data2[i] = userRed2;        //let the user adjust the red-chanel.
+      data2[i + 1] = userGreen2;  //let the user adjust the green-chanel.
+      data2[i + 2] = userBlue2;
+      data2[i + 3] = userOpacity2;//let the user adjust the opacity-chanel.
     if( i != userSpan2*4){ //NÅGOT MySKO HÄR! 
       if ( i < (userSpan2*4-userRoof2) ){
-        data[i + 3] -= userOpacity2*((Math.abs((i-((userSpan2*4)-userRoof2))/((userRange2*4)-userRoof2)))); //let the user adjust the opacity-chanel.
+        data2[i + 3] -= userOpacity2*((Math.abs((i-((userSpan2*4)-userRoof2))/((userRange2*4)-userRoof2)))); //let the user adjust the opacity-chanel.
       }
       if ( i > ((userSpan2*4)-(-userRoof2))){  
-        data[i + 3] -= userOpacity2*((Math.abs((i-((userSpan2*4)-(-userRoof2)))/((userRange2*4)-userRoof2)))); //let the user adjust the opacity-chanel.
+        data2[i + 3] -= userOpacity2*((Math.abs((i-((userSpan2*4)-(-userRoof2)))/((userRange2*4)-userRoof2)))); //let the user adjust the opacity-chanel.
       }
     }
     }
 
     // Set the data to brown for the given interval.
     if (i > userSpan3*4 - userRange3*4 && i < userSpan3*4+userRange3*4){
-      data[i] = userRed3;        //let the user adjust the red-chanel.
-      data[i + 1] = userGreen3;  //let the user adjust the green-chanel.
-      data[i + 2] = userBlue3;
-      data[i + 3] = userOpacity3;//let the user adjust the opacity-chanel.
+      data3[i] = userRed3;        //let the user adjust the red-chanel.
+      data3[i + 1] = userGreen3;  //let the user adjust the green-chanel.
+      data3[i + 2] = userBlue3;
+      data3[i + 3] = userOpacity3;//let the user adjust the opacity-chanel.
     if( i != userSpan3*4){ //NÅGOT MySKO HÄR! 
       if ( i < (userSpan3*4-userRoof3) ){
-        data[i + 3] -= userOpacity3*((Math.abs((i-((userSpan3*4)-userRoof3))/((userRange3*4)-userRoof3)))); //let the user adjust the opacity-chanel.
+        data3[i + 3] -= userOpacity3*((Math.abs((i-((userSpan3*4)-userRoof3))/((userRange3*4)-userRoof3)))); //let the user adjust the opacity-chanel.
       }
       if ( i > ((userSpan3*4)-(-userRoof3))){  
-        data[i + 3] -= userOpacity3*((Math.abs((i-((userSpan3*4)-(-userRoof3)))/((userRange3*4)-userRoof3)))); //let the user adjust the opacity-chanel.
+        data3[i + 3] -= userOpacity3*((Math.abs((i-((userSpan3*4)-(-userRoof3)))/((userRange3*4)-userRoof3)))); //let the user adjust the opacity-chanel.
       }
     }
     }
   }
+
+
+  for (let i = cutoff * 4; i < data.length - 4 ; i += 4){
+    if(data1[i+3] == isItLarger(data1[i+3],data2[i+3],data3[i+3])){
+      data[i] = data1[i]
+      data[i+1] = data1[i+1]
+      data[i+2] = data1[i+2]
+      data[i+3] = data1[i+3]
+    }
+    if(data2[i+3] == isItLarger(data1[i+3],data2[i+3],data3[i+3])){
+      data[i] = data2[i]
+      data[i+1] = data2[i+1]
+      data[i+2] = data2[i+2]
+      data[i+3] = data2[i+3]
+    }
+    if(data3[i+3] == isItLarger(data1[i+3],data2[i+3],data3[i+3])){
+      data[i] = data3[i]
+      data[i+1] = data3[i+1]
+      data[i+2] = data3[i+2]
+      data[i+3] = data3[i+3]
+    }
+  }
+  /*
+  lite sudoKOD!
+
+  låt varje användarBAR ha sin egen data DVS data1,data2,data3. istället för bara data
+
+  gör
+
+  for( över data)
+    hitta datan med störst opacitet och sätt rgb enliget denna dvs
+    
+    if data3 skulle vara den största låt 
+    data[i] = data[i+1]
+    data[i+1] =data3[i+1]
+    data[i+2] =data3[i+1]
+    data[i+3] =data3[i+1]
+
+
+  
+  */
  
   //Plot the data.
   plotData(data);
