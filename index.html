@@ -500,10 +500,17 @@ function updateTransferFunction(gl, transferFunction) {
     data[i + 1] = userGreen;  //let the user adjust the green-chanel.
     data[i + 2] = 0;
     data[i + 3] = userOpacity;//let the user adjust the opacity-chanel.
-    if( i != userSpan1*4 || (i > userSpan1*4-userRoof && i<userSpan1*4+userRoof)){ //NÅGOT MySKO HÄR!
-      console.log("i:"+ i + "  -roof:" + (userSpan1*4)-userRoof +"   +roof:"+ (userSpan1*4)+userRoof)
-      console.log(userRoof)
-      data[i + 3] -= userOpacity*((Math.abs((i-userSpan1*4)/(userRange1*4)))); //let the user adjust the opacity-chanel.
+    if( i != userSpan1*4){ //NÅGOT MySKO HÄR!
+      
+      if ( i < (userSpan1*4-userRoof) ){
+      
+    
+      data[i + 3] -= userOpacity*((Math.abs((i-((userSpan1*4)-userRoof))/((userRange1*4)-userRoof)))); //let the user adjust the opacity-chanel.
+      }
+      if ( i > ((userSpan1*4)-(-userRoof))){  
+    
+      data[i + 3] -= userOpacity*((Math.abs((i-((userSpan1*4)-(-userRoof)))/((userRange1*4)-userRoof)))); //let the user adjust the opacity-chanel.
+      }
     }
 
     
