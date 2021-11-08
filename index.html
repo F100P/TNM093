@@ -477,6 +477,11 @@ function updateTransferFunction(gl, transferFunction) {
   const userRed = document.getElementById("red").value;        //get the value of red   (255 default)  
   const userGreen = document.getElementById("green").value;    //get the value of green (215 default)  
   const userBlue = document.getElementById("blue").value;      //get the value of blue  (100 default)
+  const userSpan1 = document.getElementById("span1").value;
+  const userRange1 = document.getElementById("range1").value;
+  const userRoof = document.getElementById("roof1").value;
+  
+  
 
   for (let i = 0; i < cutoff * 4; i += 4) {
     // Set RGBA all to 0 (this is unwanted)
@@ -490,12 +495,24 @@ function updateTransferFunction(gl, transferFunction) {
   // the rest of the array
   for (let i = cutoff * 4; i < data.length - 4 ; i += 4) {
     // Set the data to gold for the given interval.
-    if (i > span_gold - range_gold && i < span_gold + range_gold){
+    if (i > userSpan1*4 - userRange1*4 && i < userSpan1*4+userRange1*4){
     data[i] = userRed;        //let the user adjust the red-chanel.
     data[i + 1] = userGreen;  //let the user adjust the green-chanel.
     data[i + 2] = 0;
-    data[i + 3] = userOpacity; //let the user adjust the opacity-chanel.
+    data[i + 3] = userOpacity;//let the user adjust the opacity-chanel.
+    if( i != userSpan1*4 || (i > userSpan1*4-userRoof && i<userSpan1*4+userRoof)){ //NÅGOT MySKO HÄR!
+      console.log("i:"+ i + "  -roof:" + (userSpan1*4)-userRoof +"   +roof:"+ (userSpan1*4)+userRoof)
+      console.log(userRoof)
+      data[i + 3] -= userOpacity*((Math.abs((i-userSpan1*4)/(userRange1*4)))); //let the user adjust the opacity-chanel.
     }
+
+    
+
+     
+    
+    }
+   
+    
 
     // Set the data to pink for the given interval.
     else if (i > span_pink - range_pink && i < span_pink + range_pink){
@@ -534,6 +551,8 @@ function updateTransferFunction(gl, transferFunction) {
 function plotData(data) {
   var canvas = document.getElementById("myCanvas"); //get canvas
   var theContext = canvas.getContext("2d");         //make it 2D
+  theContext.beginPath();
+  theContext.clearRect(0, 0, canvas.width, canvas.height);
  
   var value = data.length/4;  //create a variable that is the length of data / 4.
   var opacity = new Array(value).fill(0); //create a new array the store the opacity values from data.
@@ -1078,7 +1097,8 @@ function postError(msg) {
   </canvas>
   <canvas id="pigFacts" width="280" height="250" style="border: 1px solid #ddd;">Your browser does not support the HTML5 canvas tag
   </canvas>
-  <p>
+  <div style="display:flex; flex-direction:row">
+  <div>
     Rendering parameters
     <div>Step size: <input type="range" min="10" max="10000" value="1000" class="slider" id="stepSize" oninput="triggerRendering();"> </div>
     <div>
@@ -1087,15 +1107,15 @@ function postError(msg) {
       <div><input type="radio" name="compositing" value="fhp" onchange="triggerRendering();">First hit-point</div>
       <div><input type="radio" name="compositing" value="mip" onchange="triggerRendering();">Maximum-intensity projection</div>
     </div>
-  </p>
-  <p>
+  </div>
+  <div>
     Camera
       <div> r: <input type="range" min="0" max="100" value="50" class="slider" id="camera-r" oninput="triggerRendering();"></div>
       <div> phi: <input type="range" min="0" max="360" value="35" class="slider" id="camera-phi" oninput="triggerRendering();"></div>
       <div> theta: <input type="range" min="1" max="180" value="65" class="slider" id="camera-theta" oninput="triggerRendering();"></div>
-  </p>
+  </div>
   
-  <p>
+  <div>
     Debugging
       <div>Rendering output:</div>
       <div><input type="radio" name="debug-output" value="volume" onchange="triggerRendering();" checked>Volume Rendering</div>
@@ -1105,20 +1125,24 @@ function postError(msg) {
       <div><input type="radio" name="debug-output" value="transfer" onchange="triggerRendering();">Transfer Function</div>
       <div><input type="radio" name="debug-output" value="slice" onchange="triggerRendering();">Volume Slice</div>
       <div><input type="radio" name="debug-output" value="slice-transfer" onchange="triggerRendering();">Volume Slice with transfer function</div>
-  </p>
+  </div>
 
   <!--
     Add some UI elements here to modify the transfer function.  As mentioned above, you need to call the function 'triggerTransferFunctionUpdate' to trigger and update of the GPU representation of the transfer function texture.  If you don't call that function, no change will be visible.
   -->
-  <p>
+  <div>
     <div>Transferfunction input:</div>
     <div>Opacity:<input type="range" min="0" max="255" value="80" class="slider" id="alpha" oninput="triggerTransferFunctionUpdate();"></div>
     <div>Red:<input type="range" min="0" max="255" value="255" class="slider" id="red" oninput="triggerTransferFunctionUpdate();"></div>
     <div>Green:<input type="range" min="0" max="255" value="215" class="slider" id="green" oninput="triggerTransferFunctionUpdate();"></div>
     <div>Blue:<input type="range" min="0" max="255" value="100" class="slider" id="blue" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Widget 1:<input type="range" min="0" max="255" value="100" class="slider" id="span1" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Range 1:<input type="range" min="0" max="120" value="5" class="slider" id="range1" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Roof 1:<input type="range" min="1" max="120" value="5" class="slider" id="roof1" oninput="triggerTransferFunctionUpdate();"></div>
+    
 
-  </p>
-
+  </div>
+</div>
 </body>
 
 </html>
