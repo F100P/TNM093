@@ -354,7 +354,7 @@ const volumeRenderingFragmentSource = `#version 300 es
     else if (renderType == RenderTypeTransferFunction) {
       // Just render the transfer function into the viewport
       vec4 c = texture(transferFunction, vec2(st));
-      out_color = vec4(c.rgb, c.a);
+      out_color = vec4(c.rgb, 1.0);
       // c.a = 1.0 i orginalet
     }
     else if (renderType == RenderTypeVolumeSlice) {
@@ -670,7 +670,7 @@ function plotData(data) {
   }
 
   for (var x = 1; x < opacity.length; x++) {
-    theContext.lineTo(x, 250 - opacity[x]); //we want to print the x and y values. We take the height = 250 
+    theContext.lineTo(x, 240 - opacity[x]); //we want to print the x and y values. We take the height = 250 
                                             //minus the number of times the value occures to get the plot on the bottom of our div.
   }
   
