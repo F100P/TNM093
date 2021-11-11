@@ -350,10 +350,12 @@ const volumeRenderingFragmentSource = `#version 300 es
       // it is difficult to render negative colors
       out_color = vec4(abs(exitCoord - entryCoord), 1.0);
     }
+    //leta här
     else if (renderType == RenderTypeTransferFunction) {
       // Just render the transfer function into the viewport
       vec4 c = texture(transferFunction, vec2(st));
-      out_color = vec4(c.rgb, 1.0);
+      out_color = vec4(c.rgb, c.a);
+      // c.a = 1.0 i orginalet
     }
     else if (renderType == RenderTypeVolumeSlice) {
       // Take a central slice of the volume and render it to the screen. This is mainly
@@ -602,22 +604,23 @@ function updateTransferFunction(gl, transferFunction) {
     const op2 = data2[i+3];
     const op3 = data3[i+3];
     if(data1[i+3] == isItLarger(data1[i+3],data2[i+3],data3[i+3])){
-      data[i] =    Math.min((data1[i]*op1)+(data2[i]*op2)+(data3[i]*op3),255)
-      data[i+1] =  Math.min((data1[i+1]*op1)+(data2[i+1]*op2)+(data3[i+1]*op3),255)
-      data[i+2] =  Math.min((data1[i+2]*op1)+(data2[i+2]*op2)+(data3[i+2]*op3),255)
-      data[i+3] = data1[i+3]
+      data[i] =    Math.sqrt(((data1[i]*(op1/255))**2)+((data2[i]*(op2/255))**2)+((data3[i]*(op3/255))**2))
+      data[i+1] =  Math.sqrt(((data1[i+1]*(op1/255))**2)+((data2[i+1]*(op2/255))**2)+((data3[i+1]*(op3/255))**2))
+      data[i+2] =  Math.sqrt(((data1[i+2]*(op1/255))**2)+((data2[i+2]*(op2/255))**2)+((data3[i+2]*(op3/255))**2))
+      data[i+3] = op1
+
     }
     if(data2[i+3] == isItLarger(data1[i+3],data2[i+3],data3[i+3])){
-      data[i] =    Math.min((data1[i]*op1)+(data2[i]*op2)+(data3[i]*op3),255)
-      data[i+1] =  Math.min((data1[i+1]*op1)+(data2[i+1]*op2)+(data3[i+1]*op3),255)
-      data[i+2] =  Math.min((data1[i+2]*op1)+(data2[i+2]*op2)+(data3[i+2]*op3),255)
-      data[i+3] = data2[i+3]
+      data[i] =    Math.sqrt(((data1[i]*(op1/255))**2)+((data2[i]*(op2/255))**2)+((data3[i]*(op3/255))**2))
+      data[i+1] =  Math.sqrt(((data1[i+1]*(op1/255))**2)+((data2[i+1]*(op2/255))**2)+((data3[i+1]*(op3/255))**2))
+      data[i+2] =  Math.sqrt(((data1[i+2]*(op1/255))**2)+((data2[i+2]*(op2/255))**2)+((data3[i+2]*(op3/255))**2))
+      data[i+3] = op2
     }
     if(data3[i+3] == isItLarger(data1[i+3],data2[i+3],data3[i+3])){
-      data[i] = Math.min((data1[i]*op1)+(data2[i]*op2)+(data3[i]*op3),255)
-      data[i+1] =  Math.min((data1[i+1]*op1)+(data2[i+1]*op2)+(data3[i+1]*op3),255)
-      data[i+2] =  Math.min((data1[i+2]*op1)+(data2[i+2]*op2)+(data3[i+2]*op3),255)
-      data[i+3] = data3[i+3]
+      data[i] =    Math.sqrt(((data1[i]*(op1/255))**2)+((data2[i]*(op2/255))**2)+((data3[i]*(op3/255))**2))
+      data[i+1] =  Math.sqrt(((data1[i+1]*(op1/255))**2)+((data2[i+1]*(op2/255))**2)+((data3[i+1]*(op3/255))**2))
+      data[i+2] =  Math.sqrt(((data1[i+2]*(op1/255))**2)+((data2[i+2]*(op2/255))**2)+((data3[i+2]*(op3/255))**2))
+      data[i+3] = op3
     }
     
      
