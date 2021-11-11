@@ -603,23 +603,17 @@ function updateTransferFunction(gl, transferFunction) {
     const op1 = data1[i+3];//i+3 pga opacityn
     const op2 = data2[i+3];
     const op3 = data3[i+3];
+    data[i] =    Math.sqrt(((data1[i]*(op1/255))**2)+((data2[i]*(op2/255))**2)+((data3[i]*(op3/255))**2))
+    data[i+1] =  Math.sqrt(((data1[i+1]*(op1/255))**2)+((data2[i+1]*(op2/255))**2)+((data3[i+1]*(op3/255))**2))
+    data[i+2] =  Math.sqrt(((data1[i+2]*(op1/255))**2)+((data2[i+2]*(op2/255))**2)+((data3[i+2]*(op3/255))**2))
+    
     if(data1[i+3] == isItLarger(data1[i+3],data2[i+3],data3[i+3])){
-      data[i] =    Math.sqrt(((data1[i]*(op1/255))**2)+((data2[i]*(op2/255))**2)+((data3[i]*(op3/255))**2))
-      data[i+1] =  Math.sqrt(((data1[i+1]*(op1/255))**2)+((data2[i+1]*(op2/255))**2)+((data3[i+1]*(op3/255))**2))
-      data[i+2] =  Math.sqrt(((data1[i+2]*(op1/255))**2)+((data2[i+2]*(op2/255))**2)+((data3[i+2]*(op3/255))**2))
       data[i+3] = op1
-
     }
     if(data2[i+3] == isItLarger(data1[i+3],data2[i+3],data3[i+3])){
-      data[i] =    Math.sqrt(((data1[i]*(op1/255))**2)+((data2[i]*(op2/255))**2)+((data3[i]*(op3/255))**2))
-      data[i+1] =  Math.sqrt(((data1[i+1]*(op1/255))**2)+((data2[i+1]*(op2/255))**2)+((data3[i+1]*(op3/255))**2))
-      data[i+2] =  Math.sqrt(((data1[i+2]*(op1/255))**2)+((data2[i+2]*(op2/255))**2)+((data3[i+2]*(op3/255))**2))
       data[i+3] = op2
     }
     if(data3[i+3] == isItLarger(data1[i+3],data2[i+3],data3[i+3])){
-      data[i] =    Math.sqrt(((data1[i]*(op1/255))**2)+((data2[i]*(op2/255))**2)+((data3[i]*(op3/255))**2))
-      data[i+1] =  Math.sqrt(((data1[i+1]*(op1/255))**2)+((data2[i+1]*(op2/255))**2)+((data3[i+1]*(op3/255))**2))
-      data[i+2] =  Math.sqrt(((data1[i+2]*(op1/255))**2)+((data2[i+2]*(op2/255))**2)+((data3[i+2]*(op3/255))**2))
       data[i+3] = op3
     }
     
