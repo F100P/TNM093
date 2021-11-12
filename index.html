@@ -454,6 +454,8 @@ function updateTransferFunction(gl, transferFunction) {
   // This data should, at the end of your code, contain the information for the transfer
   // function.  Each value is stored sequentially (RGBA,RGBA,RGBA,...) for 256 values,
   // which get mapped to [0, 1] by OpenGL
+
+  //arrayer för att spara datan från våra widgets
   let data = new Uint8Array(256 * 4);
   let data1 = new Uint8Array(256 * 4);
   let data2 = new Uint8Array(256 * 4);
@@ -467,6 +469,8 @@ function updateTransferFunction(gl, transferFunction) {
   // relatively simple ramp with the first 50 values being set to 0 to reduce the noise in
   // the image.  The remainder of the ramp is just using different angles for the color
   // components
+
+
   const cutoff = 0;
   const span_brown = 44*4;
   const span_gold = 84*4;
@@ -478,6 +482,7 @@ function updateTransferFunction(gl, transferFunction) {
  
   //Lånar den här lilla funktionen från internet ( smidigt att slicea hexvärdena)
   function hexToRgb(hex) {
+    //splicear hexsträngen i tre delar (RGB)
   var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result ? {
     r: parseInt(result[1], 16),
@@ -489,39 +494,43 @@ function updateTransferFunction(gl, transferFunction) {
   
   
   //Get the user-input.
-  const userOpacity1 = document.getElementById("alpha1").value;  //get the value of alpha (80 default) 
-  
-  
-  
+  //Widget1
+  const userOpacity1 = document.getElementById("alpha1").value; 
   const hexColor1 = hexToRgb(document.getElementById("color1").value);
-  const userRed1 = hexColor1.r;        //get the value of red   (255 default)  
-  const userGreen1 = hexColor1.g;    //get the value of green (215 default)  
-  const userBlue1 = hexColor1.b;      //get the value of blue  (100 default)
+  const userRed1 = hexColor1.r;          
+  const userGreen1 = hexColor1.g;     
+  const userBlue1 = hexColor1.b;      
   const userSpan1 = document.getElementById("span1").value;
   const userRange1 = document.getElementById("range1").value;
-  const userRoof1 = document.getElementById("roof1").value;
-  
-  
+  const userRoof1 = (document.getElementById("roof1").value);
 
-  const userOpacity2 = document.getElementById("alpha2").value;  //get the value of alpha (80 default) 
+  
+  
+  //Widget2
+  const userOpacity2 = document.getElementById("alpha2").value;  
   const hexColor2 = hexToRgb(document.getElementById("color2").value);
-  const userRed2 = hexColor2.r;        //get the value of red   (255 default)  
-  const userGreen2 = hexColor2.g;    //get the value of green (215 default)  
-  const userBlue2 = hexColor2.b;      //get the value of blue  (100 default)
+  const userRed2 = hexColor2.r;        
+  const userGreen2 = hexColor2.g;    
+  const userBlue2 = hexColor2.b;      
   const userSpan2 = document.getElementById("span2").value;
   const userRange2 = document.getElementById("range2").value;
   const userRoof2 = document.getElementById("roof2").value;
 
-  const userOpacity3 = document.getElementById("alpha3").value;  //get the value of alpha (80 default) 
+
+  //Widget3
+  const userOpacity3 = document.getElementById("alpha3").value;  
   const hexColor3 = hexToRgb(document.getElementById("color3").value);
-  const userRed3 = hexColor3.r;        //get the value of red   (255 default)  
-  const userGreen3 = hexColor3.g;    //get the value of green (215 default)  
-  const userBlue3 = hexColor3.b;      //get the value of blue  (100 default)
+  const userRed3 = hexColor3.r;        
+  const userGreen3 = hexColor3.g;    
+  const userBlue3 = hexColor3.b;     
   const userSpan3 = document.getElementById("span3").value;
   const userRange3 = document.getElementById("range3").value;
   const userRoof3 = document.getElementById("roof3").value;
-  
-  
+
+  //låt taket baseras på rangen
+  const Roof1=(userRange1*4)*userRoof1
+  const Roof2=(userRange2*4)*userRoof2
+  const Roof3=(userRange3*4)*userRoof3
   //Funktion för att hitta största värdet bland 3 tal
   function isItLarger(value1, value2, value3){
     result = value1;
@@ -532,73 +541,81 @@ function updateTransferFunction(gl, transferFunction) {
       result =  value3;
     }
     return result;
-    
   }
 
   for (let i = 0; i < cutoff * 4; i += 4) {
     // Set RGBA all to 0 (this is unwanted)
-    data[i] = 0;
-    data[i + 1] = 0;
-    data[i + 2] = 0;
-    data[i + 3] = 0;
+    data[i] = 0; //alpha
+    data[i + 1] = 0; //red
+    data[i + 2] = 0; //green
+    data[i + 3] = 0; //blue
   }
   
   // For now, just create a linear ramp from 0 to 1. We start at the cutoff value and fill
   // the rest of the array
   for (let i = cutoff * 4; i < data.length - 4 ; i += 4) {
-    // Set the data to gold for the given interval.
+    // Set the data widget1
     if (i > userSpan1*4 - userRange1*4 && i < userSpan1*4+userRange1*4){
       data1[i] = userRed1;        //let the user adjust the red-chanel.
       data1[i + 1] = userGreen1;  //let the user adjust the green-chanel.
       data1[i + 2] = userBlue1;
       data1[i + 3] = userOpacity1;//let the user adjust the opacity-chanel.
+      
+      
+      
+     
     if( i != userSpan1*4){ //NÅGOT MySKO HÄR! 
-      if ( i < (userSpan1*4-userRoof1) ){
-        data1[i + 3] -= userOpacity1*((Math.abs((i-((userSpan1*4)-userRoof1))/((userRange1*4)-userRoof1)))); //let the user adjust the opacity-chanel.
+    
+      if ( i < ((userSpan1*4)-Roof1)) {
+        data1[i + 3] -= userOpacity1*((Math.abs((i-((userSpan1*4)-(Roof1)))/((userRange1*4)-Roof1))));  //let the user adjust the opacity-chanel.
         
       }
-      if ( i > ((userSpan1*4)-(-userRoof1))){  
-        data1[i + 3] -= userOpacity1*((Math.abs((i-((userSpan1*4)-(-userRoof1)))/((userRange1*4)-userRoof1)))); //let the user adjust the opacity-chanel.
+      if ( i > ((userSpan1*4)-(-Roof1))){  
+        data1[i + 3] -= userOpacity1*((Math.abs((i-((userSpan1*4)-(-Roof1)))/((userRange1*4)-Roof1)))); //let the user adjust the opacity-chanel.
        
       }
     }
     }
     
-    // Set the data to gold for the given interval.
+    // set data of widget2
     if (i > userSpan2*4 - userRange2*4 && i < userSpan2*4+userRange2*4){
       data2[i] = userRed2;        //let the user adjust the red-chanel.
       data2[i + 1] = userGreen2;  //let the user adjust the green-chanel.
       data2[i + 2] = userBlue2;
       data2[i + 3] = userOpacity2;//let the user adjust the opacity-chanel.
     if( i != userSpan2*4){ //NÅGOT MySKO HÄR! 
-      if ( i < (userSpan2*4-userRoof2) ){
-        data2[i + 3] -= userOpacity2*((Math.abs((i-((userSpan2*4)-userRoof2))/((userRange2*4)-userRoof2)))); //let the user adjust the opacity-chanel.
+      if ( i < ((userSpan2*4)-Roof2)) {
+        data2[i + 3] -= userOpacity2*((Math.abs((i-((userSpan2*4)-(Roof2)))/((userRange2*4)-Roof2))));  //let the user adjust the opacity-chanel.
+        
       }
-      if ( i > ((userSpan2*4)-(-userRoof2))){  
-        data2[i + 3] -= userOpacity2*((Math.abs((i-((userSpan2*4)-(-userRoof2)))/((userRange2*4)-userRoof2)))); //let the user adjust the opacity-chanel.
+      if ( i > ((userSpan2*4)-(-Roof2))){  
+        data2[i + 3] -= userOpacity2*((Math.abs((i-((userSpan2*4)-(-Roof2)))/((userRange2*4)-Roof2)))); //let the user adjust the opacity-chanel.
+       
       }
     }
     }
 
-    // Set the data to brown for the given interval.
+    // Set the data widget3
     if (i > userSpan3*4 - userRange3*4 && i < userSpan3*4+userRange3*4){
       data3[i] = userRed3;        //let the user adjust the red-chanel.
       data3[i + 1] = userGreen3;  //let the user adjust the green-chanel.
       data3[i + 2] = userBlue3;
       data3[i + 3] = userOpacity3;//let the user adjust the opacity-chanel.
     if( i != userSpan3*4){ //NÅGOT MySKO HÄR! 
-      if ( i < (userSpan3*4-userRoof3) ){
-        data3[i + 3] -= userOpacity3*((Math.abs((i-((userSpan3*4)-userRoof3))/((userRange3*4)-userRoof3)))); //let the user adjust the opacity-chanel.
+      if ( i < ((userSpan3*4)-Roof3)) {
+        data3[i + 3] -= userOpacity3*((Math.abs((i-((userSpan3*4)-(Roof3)))/((userRange3*4)-Roof3))));  //let the user adjust the opacity-chanel.
+        
       }
-      if ( i > ((userSpan3*4)-(-userRoof3))){  
-        data3[i + 3] -= userOpacity3*((Math.abs((i-((userSpan3*4)-(-userRoof3)))/((userRange3*4)-userRoof3)))); //let the user adjust the opacity-chanel.
+      if ( i > ((userSpan3*4)-(-Roof3))){  
+        data3[i + 3] -= userOpacity3*((Math.abs((i-((userSpan3*4)-(-Roof3)))/((userRange3*4)-Roof3)))); //let the user adjust the opacity-chanel.
+       
       }
     }
     }
   }
 
   
-
+  //sammanställ all data för visualizering 
   for (let i = cutoff * 4; i < data.length - 4 ; i += 4){
     const op1 = data1[i+3];//i+3 pga opacityn
     const op2 = data2[i+3];
@@ -1266,16 +1283,16 @@ function postError(msg) {
     <div>Opacity:<input type="range" min="0" max="255" value="80" class="slider" id="alpha1" oninput="triggerTransferFunctionUpdate();"></div>
    
     <div>Widget 1:<input type="range" min="0" max="255" value="50" class="slider" id="span1" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Range 1:<input type="range" min="0" max="120" value="5" class="slider" id="range1" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Roof 1:<input type="range" min="1" max="120" value="5" class="slider" id="roof1" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Range 1:<input type="range" min="1" max="120" value="5" class="slider" id="range1" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Roof 1:<input type="range" min="0" max="1" step="0.01" value="0" class="slider" id="roof1" oninput="triggerTransferFunctionUpdate();"></div>
   </div>
   <div>
     <div>Transferfunction input 2:</div>
     <div>Color 2<input type="color" id="color2" value="#00FF00"oninput="triggerTransferFunctionUpdate();"></div>
     <div>Opacity:<input type="range" min="0" max="255" value="80" class="slider" id="alpha2" oninput="triggerTransferFunctionUpdate();"></div>
     <div>Widget 2:<input type="range" min="0" max="255" value="84" class="slider" id="span2" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Range 2:<input type="range" min="0" max="120" value="5" class="slider" id="range2" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Roof 2:<input type="range" min="1" max="120" value="5" class="slider" id="roof2" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Range 2:<input type="range" min="1" max="120" value="5" class="slider" id="range2" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Roof 2:<input type="range" min="0" max="1" step="0.01" value="0" class="slider" id="roof2" oninput="triggerTransferFunctionUpdate();"></div>
   </div>
   <div>
     
@@ -1283,8 +1300,8 @@ function postError(msg) {
     <div>Color 3<input type="color" id="color3" value="#0000FF" oninput="triggerTransferFunctionUpdate();"></div>
     <div>Opacity:<input type="range" min="0" max="255" value="80" class="slider" id="alpha3" oninput="triggerTransferFunctionUpdate();"></div>
     <div>Widget 3:<input type="range" min="0" max="255" value="138" class="slider" id="span3" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Range 3:<input type="range" min="0" max="120" value="5" class="slider" id="range3" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Roof 3:<input type="range" min="1" max="120" value="5" class="slider" id="roof3" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Range 3:<input type="range" min="1" max="120" value="5" class="slider" id="range3" oninput="triggerTransferFunctionUpdate();"></div>
+    <div>Roof 3:<input type="range" min="0" max="1" step="0.01" value="0" class="slider" id="roof3" oninput="triggerTransferFunctionUpdate();"></div>
     
 </div>
 </body>
