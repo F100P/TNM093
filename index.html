@@ -3,7 +3,10 @@
 <!--
   Adding Brandon Jones and Colin MacKenzie IV's gl-matrix library that provides easy to
   use vector and matrix maths operations.  Source: https://github.com/toji/gl-matrix
+
+  Används för att beräkningar av matrisoperationer
 -->
+
 <script type="text/javascript" src="gl-matrix.js"></script>
 
 <!-- Main WebGL functions -->
@@ -18,7 +21,7 @@
 // again.  This value is set to true by any user input that modifies the rendering
 let RenderingIsDirty = true;
 let TransferFunctionIsDirty = true;
-
+let $threshold = 0.1;
 
 
 //
@@ -187,6 +190,8 @@ const volumeRenderingVertexSource = `#version 300 es
   }
 `;
 
+
+//Shader
 const volumeRenderingFragmentSource = `#version 300 es
   // WebGL2 requires specifying the floating point precision once per program object
   precision highp float;
@@ -281,7 +286,7 @@ const volumeRenderingFragmentSource = `#version 300 es
         }
         else if (compositingMethod == CompositingMethodFirstHitPoint) {
 
-          float threshold = 0.5;
+          float threshold = ${$threshold};
           if(color.a > threshold){
             result = color;
           }
@@ -443,221 +448,191 @@ function createProgram(gl, vertexSource, fragmentSource) {
 ///
 /// @param gl the OpenGL context
 /// @param transferFunction the texture object that is updated by this function
-function updateTransferFunction(gl, transferFunction) {
-  // Create a new array that holds the values for the transfer function.  The width of 256
-  // is also hard-coded further down where the transferFunctionTexture OpenGL object is
-  // created, so if you want to change it here, you have to change it there as well.  We
-  // multiply the value by 4 as we have RGBA for each pixel.
-  // Also we created the transfer function texture using the UNSIGNED_BYTE type, which
-  // means that every value in the transfer function has to be between [0, 255]
+  function updateTransferFunction(gl, transferFunction) {
+    // Create a new array that holds the values for the transfer function.  The width of 256
+    // is also hard-coded further down where the transferFunctionTexture OpenGL object is
+    // created, so if you want to change it here, you have to change it there as well.  We
+    // multiply the value by 4 as we have RGBA for each pixel.
+    // Also we created the transfer function texture using the UNSIGNED_BYTE type, which
+    // means that every value in the transfer function has to be between [0, 255]
 
-  // This data should, at the end of your code, contain the information for the transfer
-  // function.  Each value is stored sequentially (RGBA,RGBA,RGBA,...) for 256 values,
-  // which get mapped to [0, 1] by OpenGL
+    // This data should, at the end of your code, contain the information for the transfer
+    // function.  Each value is stored sequentially (RGBA,RGBA,RGBA,...) for 256 values,
+    // which get mapped to [0, 1] by OpenGL
 
-  //arrayer för att spara datan från våra widgets
-  let data = new Uint8Array(256 * 4);
-  let data1 = new Uint8Array(256 * 4);
-  let data2 = new Uint8Array(256 * 4);
-  let data3 = new Uint8Array(256 * 4);
-
-
-  ////////////////////////////////////////////////////////////////////////////////////////
-  /// Beginning of the provided transfer function
-
-  // The provided transfer function that you'll replace with your own solution is a
-  // relatively simple ramp with the first 50 values being set to 0 to reduce the noise in
-  // the image.  The remainder of the ramp is just using different angles for the color
-  // components
+    //arrayer för att spara datan från våra widgets
+    let data = new Uint8Array(256 * 4);
+    let data1 = new Uint8Array(256 * 4);
+    let data2 = new Uint8Array(256 * 4);
+    let data3 = new Uint8Array(256 * 4);
 
 
-  const cutoff = 0;
-  const span_brown = 44*4;
-  const span_gold = 84*4;
-  const span_pink = 138*4;
-  //peak at 44, 84 och 138
-  const range_brown = 28;  //this will be added / removed from span_brown to create an interval. 
-  const range_gold = 30;   //this will be added / removed from span_gold to create an interval. 
-  const range_pink = 32;   //this will be added / removed from span_pink to create an interval. 
- 
-  //Lånar den här lilla funktionen från internet ( smidigt att slicea hexvärdena)
-  function hexToRgb(hex) {
-    //splicear hexsträngen i tre delar (RGB)
-  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : null;
-  }
+    ////////////////////////////////////////////////////////////////////////////////////////
+    /// Beginning of the provided transfer function
 
-  
-  
-  //Get the user-input.
-  //Widget1
-  const userOpacity1 = document.getElementById("alpha1").value; 
-  const hexColor1 = hexToRgb(document.getElementById("color1").value);
-  const userRed1 = hexColor1.r;          
-  const userGreen1 = hexColor1.g;     
-  const userBlue1 = hexColor1.b;      
-  const userSpan1 = document.getElementById("span1").value;
-  const userRange1 = document.getElementById("range1").value;
-  const userRoof1 = (document.getElementById("roof1").value);
-
-  
-  
-  //Widget2
-  const userOpacity2 = document.getElementById("alpha2").value;  
-  const hexColor2 = hexToRgb(document.getElementById("color2").value);
-  const userRed2 = hexColor2.r;        
-  const userGreen2 = hexColor2.g;    
-  const userBlue2 = hexColor2.b;      
-  const userSpan2 = document.getElementById("span2").value;
-  const userRange2 = document.getElementById("range2").value;
-  const userRoof2 = document.getElementById("roof2").value;
+    // The provided transfer function that you'll replace with your own solution is a
+    // relatively simple ramp with the first 50 values being set to 0 to reduce the noise in
+    // the image.  The remainder of the ramp is just using different angles for the color
+    // components
 
 
-  //Widget3
-  const userOpacity3 = document.getElementById("alpha3").value;  
-  const hexColor3 = hexToRgb(document.getElementById("color3").value);
-  const userRed3 = hexColor3.r;        
-  const userGreen3 = hexColor3.g;    
-  const userBlue3 = hexColor3.b;     
-  const userSpan3 = document.getElementById("span3").value;
-  const userRange3 = document.getElementById("range3").value;
-  const userRoof3 = document.getElementById("roof3").value;
+    const cutoff = 0;
+    //Lånar den här lilla funktionen från internet ( smidigt att slicea hexvärdena)
+    function hexToRgb(hex) {
+      //splicear hexsträngen i tre delar (RGB) och sparar dessa i en array
+      var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
 
-  //låt taket baseras på rangen
-  const Roof1=(userRange1*4)*userRoof1
-  const Roof2=(userRange2*4)*userRoof2
-  const Roof3=(userRange3*4)*userRoof3
-  //Funktion för att hitta största värdet bland 3 tal
-  function isItLarger(value1, value2, value3){
-    result = value1;
-    if(value2>result){
-      result = value2;
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
     }
-    if (value3>result){
-      result =  value3;
-    }
-    return result;
-  }
 
-  for (let i = 0; i < cutoff * 4; i += 4) {
-    // Set RGBA all to 0 (this is unwanted)
-    data[i] = 0; //alpha
-    data[i + 1] = 0; //red
-    data[i + 2] = 0; //green
-    data[i + 3] = 0; //blue
-  }
-  
-  // For now, just create a linear ramp from 0 to 1. We start at the cutoff value and fill
-  // the rest of the array
-  for (let i = cutoff * 4; i < data.length - 4 ; i += 4) {
-    // Set the data widget1
-    if (i > userSpan1*4 - userRange1*4 && i < userSpan1*4+userRange1*4){
-      data1[i] = userRed1;        //let the user adjust the red-chanel.
-      data1[i + 1] = userGreen1;  //let the user adjust the green-chanel.
-      data1[i + 2] = userBlue1;
-      data1[i + 3] = userOpacity1;//let the user adjust the opacity-chanel.
-      
-      
-      
-     
-    if( i != userSpan1*4){ //NÅGOT MySKO HÄR! 
-    
-      if ( i < ((userSpan1*4)-Roof1)) {
-        data1[i + 3] -= userOpacity1*((Math.abs((i-((userSpan1*4)-(Roof1)))/((userRange1*4)-Roof1))));  //let the user adjust the opacity-chanel.
-        
+
+
+    //Hämta all data från användaren
+    //Widget1
+    const userOpacity1 = document.getElementById("alpha1").value;
+    const hexColor1 = hexToRgb(document.getElementById("color1").value);
+    const userRed1 = hexColor1.r;
+    const userGreen1 = hexColor1.g;
+    const userBlue1 = hexColor1.b;
+    const userSpan1 = document.getElementById("span1").value;
+    const userRange1 = document.getElementById("range1").value;
+    const userRoof1 = (document.getElementById("roof1").value);
+
+    //Widget2
+    const userOpacity2 = document.getElementById("alpha2").value;
+    const hexColor2 = hexToRgb(document.getElementById("color2").value);
+    const userRed2 = hexColor2.r;
+    const userGreen2 = hexColor2.g;
+    const userBlue2 = hexColor2.b;
+    const userSpan2 = document.getElementById("span2").value;
+    const userRange2 = document.getElementById("range2").value;
+    const userRoof2 = document.getElementById("roof2").value;
+
+    //Widget3
+    const userOpacity3 = document.getElementById("alpha3").value;
+    const hexColor3 = hexToRgb(document.getElementById("color3").value);
+    const userRed3 = hexColor3.r;
+    const userGreen3 = hexColor3.g;
+    const userBlue3 = hexColor3.b;
+    const userSpan3 = document.getElementById("span3").value;
+    const userRange3 = document.getElementById("range3").value;
+    const userRoof3 = document.getElementById("roof3").value;
+
+    //låt taket baseras på rangen
+    const Roof1 = (userRange1 * 4) * userRoof1
+    const Roof2 = (userRange2 * 4) * userRoof2
+    const Roof3 = (userRange3 * 4) * userRoof3
+    //Funktion för att hitta största värdet bland 3 tal
+    function isItLarger(value1, value2, value3) {
+      result = value1;
+      if (value2 > result) {
+        result = value2;
       }
-      if ( i > ((userSpan1*4)-(-Roof1))){  
-        data1[i + 3] -= userOpacity1*((Math.abs((i-((userSpan1*4)-(-Roof1)))/((userRange1*4)-Roof1)))); //let the user adjust the opacity-chanel.
-       
+      if (value3 > result) {
+        result = value3;
       }
-    }
-    }
-    
-    // set data of widget2
-    if (i > userSpan2*4 - userRange2*4 && i < userSpan2*4+userRange2*4){
-      data2[i] = userRed2;        //let the user adjust the red-chanel.
-      data2[i + 1] = userGreen2;  //let the user adjust the green-chanel.
-      data2[i + 2] = userBlue2;
-      data2[i + 3] = userOpacity2;//let the user adjust the opacity-chanel.
-    if( i != userSpan2*4){ //NÅGOT MySKO HÄR! 
-      if ( i < ((userSpan2*4)-Roof2)) {
-        data2[i + 3] -= userOpacity2*((Math.abs((i-((userSpan2*4)-(Roof2)))/((userRange2*4)-Roof2))));  //let the user adjust the opacity-chanel.
-        
-      }
-      if ( i > ((userSpan2*4)-(-Roof2))){  
-        data2[i + 3] -= userOpacity2*((Math.abs((i-((userSpan2*4)-(-Roof2)))/((userRange2*4)-Roof2)))); //let the user adjust the opacity-chanel.
-       
-      }
-    }
+      return result;
     }
 
-    // Set the data widget3
-    if (i > userSpan3*4 - userRange3*4 && i < userSpan3*4+userRange3*4){
-      data3[i] = userRed3;        //let the user adjust the red-chanel.
-      data3[i + 1] = userGreen3;  //let the user adjust the green-chanel.
-      data3[i + 2] = userBlue3;
-      data3[i + 3] = userOpacity3;//let the user adjust the opacity-chanel.
-    if( i != userSpan3*4){ //NÅGOT MySKO HÄR! 
-      if ( i < ((userSpan3*4)-Roof3)) {
-        data3[i + 3] -= userOpacity3*((Math.abs((i-((userSpan3*4)-(Roof3)))/((userRange3*4)-Roof3))));  //let the user adjust the opacity-chanel.
-        
+    for (let i = 0; i < cutoff * 4; i += 4) {
+      // Set RGBA all to 0 (this is unwanted)
+      data[i] = 0; //alpha
+      data[i + 1] = 0; //red
+      data[i + 2] = 0; //green
+      data[i + 3] = 0; //blue
+    }
+
+    // For now, just create a linear ramp from 0 to 1. We start at the cutoff value and fill
+    // the rest of the array
+    for (let i = cutoff * 4; i < data.length - 4; i += 4) {
+
+
+      //I en annan värld så hade jag gjort If-statserna till funktioner..
+
+      // Set the data widget1
+      if (i > userSpan1 * 4 - userRange1 * 4 && i < userSpan1 * 4 + userRange1 * 4) {
+        data1[i] = userRed1;        //let the user adjust the red-chanel.
+        data1[i + 1] = userGreen1;  //let the user adjust the green-chanel.
+        data1[i + 2] = userBlue1;
+        data1[i + 3] = userOpacity1;//let the user adjust the opacity-chanel.
+
+        if (i != userSpan1 * 4) {
+          if (i < ((userSpan1 * 4) - Roof1)) {
+            data1[i + 3] -= userOpacity1 * ((Math.abs((i - ((userSpan1 * 4) - (Roof1))) / ((userRange1 * 4) - Roof1))));  //let the user adjust the opacity-chanel.
+          }
+          if (i > ((userSpan1 * 4) - (-Roof1))) {
+            data1[i + 3] -= userOpacity1 * ((Math.abs((i - ((userSpan1 * 4) - (-Roof1))) / ((userRange1 * 4) - Roof1)))); //let the user adjust the opacity-chanel.
+          }
+        }
       }
-      if ( i > ((userSpan3*4)-(-Roof3))){  
-        data3[i + 3] -= userOpacity3*((Math.abs((i-((userSpan3*4)-(-Roof3)))/((userRange3*4)-Roof3)))); //let the user adjust the opacity-chanel.
-       
+
+      // set data of widget2
+      if (i > userSpan2 * 4 - userRange2 * 4 && i < userSpan2 * 4 + userRange2 * 4) {
+        data2[i] = userRed2;        //let the user adjust the red-chanel.
+        data2[i + 1] = userGreen2;  //let the user adjust the green-chanel.
+        data2[i + 2] = userBlue2;
+        data2[i + 3] = userOpacity2;//let the user adjust the opacity-chanel.
+        if (i != userSpan2 * 4) { //NÅGOT MySKO HÄR! 
+          if (i < ((userSpan2 * 4) - Roof2)) {
+            data2[i + 3] -= userOpacity2 * ((Math.abs((i - ((userSpan2 * 4) - (Roof2))) / ((userRange2 * 4) - Roof2))));  //let the user adjust the opacity-chanel.
+
+          }
+          if (i > ((userSpan2 * 4) - (-Roof2))) {
+            data2[i + 3] -= userOpacity2 * ((Math.abs((i - ((userSpan2 * 4) - (-Roof2))) / ((userRange2 * 4) - Roof2)))); //let the user adjust the opacity-chanel.
+
+          }
+        }
+      }
+
+      // Set the data widget3
+      if (i > userSpan3 * 4 - userRange3 * 4 && i < userSpan3 * 4 + userRange3 * 4) {
+        data3[i] = userRed3;        //let the user adjust the red-chanel.
+        data3[i + 1] = userGreen3;  //let the user adjust the green-chanel.
+        data3[i + 2] = userBlue3;
+        data3[i + 3] = userOpacity3;//let the user adjust the opacity-chanel.
+        if (i != userSpan3 * 4) { 
+          if (i < ((userSpan3 * 4) - Roof3)) {
+            data3[i + 3] -= userOpacity3 * ((Math.abs((i - ((userSpan3 * 4) - (Roof3))) / ((userRange3 * 4) - Roof3))));  //let the user adjust the opacity-chanel.
+
+          }
+          if (i > ((userSpan3 * 4) - (-Roof3))) {
+            data3[i + 3] -= userOpacity3 * ((Math.abs((i - ((userSpan3 * 4) - (-Roof3))) / ((userRange3 * 4) - Roof3)))); //let the user adjust the opacity-chanel.
+
+          }
+        }
       }
     }
+
+
+    //sammanställ all data för visualizering 
+    for (let i = cutoff * 4; i < data.length - 4; i += 4) {
+      const op1 = data1[i + 3];//i+3 pga opacityn
+      const op2 = data2[i + 3];
+      const op3 = data3[i + 3];
+      data[i] = Math.sqrt(((data1[i] * (op1 / 255)) ** 2) + ((data2[i] * (op2 / 255)) ** 2) + ((data3[i] * (op3 / 255)) ** 2))
+      data[i + 1] = Math.sqrt(((data1[i + 1] * (op1 / 255)) ** 2) + ((data2[i + 1] * (op2 / 255)) ** 2) + ((data3[i + 1] * (op3 / 255)) ** 2))
+      data[i + 2] = Math.sqrt(((data1[i + 2] * (op1 / 255)) ** 2) + ((data2[i + 2] * (op2 / 255)) ** 2) + ((data3[i + 2] * (op3 / 255)) ** 2))
+
+      if (data1[i + 3] == isItLarger(data1[i + 3], data2[i + 3], data3[i + 3])) {
+        data[i + 3] = op1
+      }
+      if (data2[i + 3] == isItLarger(data1[i + 3], data2[i + 3], data3[i + 3])) {
+        data[i + 3] = op2
+      }
+      if (data3[i + 3] == isItLarger(data1[i + 3], data2[i + 3], data3[i + 3])) {
+        data[i + 3] = op3
+      }
+
+
     }
-  }
 
-  
-  //sammanställ all data för visualizering 
-  for (let i = cutoff * 4; i < data.length - 4 ; i += 4){
-    const op1 = data1[i+3];//i+3 pga opacityn
-    const op2 = data2[i+3];
-    const op3 = data3[i+3];
-    data[i] =    Math.sqrt(((data1[i]*(op1/255))**2)+((data2[i]*(op2/255))**2)+((data3[i]*(op3/255))**2))
-    data[i+1] =  Math.sqrt(((data1[i+1]*(op1/255))**2)+((data2[i+1]*(op2/255))**2)+((data3[i+1]*(op3/255))**2))
-    data[i+2] =  Math.sqrt(((data1[i+2]*(op1/255))**2)+((data2[i+2]*(op2/255))**2)+((data3[i+2]*(op3/255))**2))
-    
-    if(data1[i+3] == isItLarger(data1[i+3],data2[i+3],data3[i+3])){
-      data[i+3] = op1
-    }
-    if(data2[i+3] == isItLarger(data1[i+3],data2[i+3],data3[i+3])){
-      data[i+3] = op2
-    }
-    if(data3[i+3] == isItLarger(data1[i+3],data2[i+3],data3[i+3])){
-      data[i+3] = op3
-    }
-    
-     
-  }
-  /*
-  lite sudoKOD!
-
-  låt varje användarBAR ha sin egen data DVS data1,data2,data3. istället för bara data
-
-  gör
-
-  for( över data)
-    hitta datan med störst opacitet och sätt rgb enliget denna dvs
-    
-    if data3 skulle vara den största låt 
-    data[i] = data[i+1]
-    data[i+1] =data3[i+1]
-    data[i+2] =data3[i+1]
-    data[i+3] =data3[i+1]
-
-
-  
-  */
- 
-  //Plot the data.
-  plotData(data);
+    //Plot the data.
+    //Vi gör detta för att visualisera våra widgets
+    plotData(data, "green");
 
   /// End of the provided transfer function
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -672,8 +647,10 @@ function updateTransferFunction(gl, transferFunction) {
 
 };
 
+
+
 // Function to plot data.
-function plotData(data) {
+function plotData(data,color) {
   var canvas = document.getElementById("myCanvas"); //get canvas
   var theContext = canvas.getContext("2d");         //make it 2D
   theContext.beginPath();
@@ -691,7 +668,7 @@ function plotData(data) {
                                             //minus the number of times the value occures to get the plot on the bottom of our div.
   }
   
-  theContext.strokeStyle = "blue"; //Set the plotcolor to blue.
+  theContext.strokeStyle = color; //Set the plotcolor to blue.
   theContext.stroke();  //draw it.
 };
 
@@ -1049,32 +1026,32 @@ async function main() {
     }
     plotPigData(convertedData);
     function plotPigData(convertedData) {
-      
-  var canvas = document.getElementById("pigFacts");
-  var theContext = canvas.getContext("2d");
- 
-  var value = 256;
-  var numberOfTimes = new Array(value).fill(0);
 
-  
-  for (let i = 0; i < convertedData.length; i++){
-   numberOfTimes[convertedData[i]]++
-   }
-   
-  for (let i = 0; i < numberOfTimes.length; i++){
-    numberOfTimes[i] = Math.log(numberOfTimes[i])*10;
-  }
-  console.log(numberOfTimes)
-  theContext.strokeStyle = 'orange';
+      var canvas = document.getElementById("pigFacts");
+      var theContext = canvas.getContext("2d");
 
-  for (var x = 1; x < value; x++) {
-    theContext.lineTo(x, 250 - numberOfTimes[x]); //we want to print the x and y values and must take the height = 250 
-                                                  //minus the number of times the value occures.
-  }
- 
-  theContext.stroke(); //print the result
- 
-};
+      var value = 256;
+      var numberOfTimes = new Array(value).fill(0);
+
+
+      for (let i = 0; i < convertedData.length; i++) {
+        numberOfTimes[convertedData[i]]++
+      }
+
+      for (let i = 0; i < numberOfTimes.length; i++) {
+        numberOfTimes[i] = Math.log(numberOfTimes[i]) * 10;
+      }
+      console.log(numberOfTimes)
+      theContext.strokeStyle = 'orange';
+
+      for (var x = 1; x < value; x++) {
+        theContext.lineTo(x, 250 - numberOfTimes[x]); //we want to print the x and y values and must take the height = 250 
+        //minus the number of times the value occures.
+      }
+
+      theContext.stroke(); //print the result
+
+    };
 
     // The volume size also comes from the available meta data for the pig.raw
     // if you want to have a look at the metadata, the pig.dat contains that
@@ -1214,96 +1191,112 @@ function postError(msg) {
 
 
 
-//Den stora strängen är shadern
-
-/*
-1.Lägg till colorpicker
-
-2.Blanda färgerna när dom överlappar
-
-3.Se över first hit och dom där
-
-
-
-*/
 
 
 </script>
 
 
-<body onload="main();">
+<body onload="main();" style="background-color: #ced8d2;">
   <p id="error"></p>
   <div style="display:flex; flex-direction:row; ">
-  <canvas id="glCanvas" width="640" height="480"></canvas>
-  <div style="display:flex; flex-direction:column; ">
- 
-  <canvas id="pigFacts" width="280" height="240" style="border: 1px solid #ddd;">Your browser does not support the HTML5 canvas tag
-  </canvas>
-  <canvas id="myCanvas" width="280" height="240" style="border: 1px solid #ddd;">Your browser does not support the HTML5 canvas tag
-  </canvas>
-</div>
-</div>
-  <div style="display:flex; flex-direction:row">
-    <div style="display:flex; flex-direction:column">
-  <div style="margin: 10px;">
-    Rendering parameters
-    <div>Step size: <input type="range" min="10" max="10000" value="1000" class="slider" id="stepSize" oninput="triggerRendering();"> </div>
-    <div>
-      <div>Compositing method:</div>
-      <div><input type="radio" name="compositing" value="ftb" onchange="triggerRendering();" checked>Front-to-back</div>
-      <div><input type="radio" name="compositing" value="fhp" onchange="triggerRendering();">First hit-point</div>
-      <div><input type="radio" name="compositing" value="mip" onchange="triggerRendering();">Maximum-intensity projection</div>
+    <canvas id="glCanvas" width="640" height="480" style="border-radius: 10px;margin-right: 5px;"></canvas>
+    <div style="display:flex; flex-direction:column; ">
+
+      <canvas id="pigFacts" width="280" height="240"
+        style="border: 1px solid #ddd;background-color: white;border-radius: 10px;">Your browser does not support the
+        HTML5 canvas tag
+      </canvas>
+      <canvas id="myCanvas" width="280" height="240"
+        style="border: 1px solid #ddd;background-color: white;border-radius: 10px;">Your browser does not support the
+        HTML5 canvas tag
+      </canvas>
     </div>
   </div>
-  <div div style="margin: 10px;">
-    Camera
-      <div> r: <input type="range" min="0" max="100" value="50" class="slider" id="camera-r" oninput="triggerRendering();"></div>
-      <div> phi: <input type="range" min="0" max="360" value="35" class="slider" id="camera-phi" oninput="triggerRendering();"></div>
-      <div> theta: <input type="range" min="1" max="180" value="65" class="slider" id="camera-theta" oninput="triggerRendering();"></div>
-  </div>
-  
-  <div div style="margin: 10px;">
-    Debugging
+  <div style="display:flex; flex-direction:row">
+    <div
+      style="display:flex; flex-direction:column; background-color: white; border-radius: 10px; margin: 10px; padding: 10px;">
+      <div style="margin: 10px;">
+        Rendering parameters
+        <div>Step size: <input type="range" min="10" max="10000" value="1000" class="slider" id="stepSize"
+            oninput="triggerRendering();">
+        </div>
+
+
+        <div>Compositing method:</div>
+        <div><input type="radio" name="compositing" value="ftb" onchange="triggerRendering();" checked>Front-to-back
+        </div>
+        <div><input type="radio" name="compositing" value="fhp" onchange="triggerRendering();">First hit-point</div>
+        <div><input type="radio" name="compositing" value="mip" onchange="triggerRendering();">Maximum-intensity
+          projection</div>
+      </div>
+    </div>
+    <div div style="margin: 10px; background-color: white; border-radius: 10px; padding: 10px;">
+      Camera
+      <div> r: <input type="range" min="0" max="100" value="50" class="slider" id="camera-r"
+          oninput="triggerRendering();"></div>
+      <div> phi: <input type="range" min="0" max="360" value="35" class="slider" id="camera-phi"
+          oninput="triggerRendering();"></div>
+      <div> theta: <input type="range" min="1" max="180" value="65" class="slider" id="camera-theta"
+          oninput="triggerRendering();"></div>
+    </div>
+
+    <div div style="margin: 10px; background-color: white; border-radius: 10px; padding: 10px;">
+      Debugging
       <div>Rendering output:</div>
-      <div><input type="radio" name="debug-output" value="volume" onchange="triggerRendering();" checked>Volume Rendering</div>
+      <div><input type="radio" name="debug-output" value="volume" onchange="triggerRendering();" checked>Volume
+        Rendering</div>
       <div><input type="radio" name="debug-output" value="entry" onchange="triggerRendering();">Entry Points</div>
       <div><input type="radio" name="debug-output" value="exit" onchange="triggerRendering();">Exit Points</div>
       <div><input type="radio" name="debug-output" value="direction" onchange="triggerRendering();">Ray direction</div>
-      <div><input type="radio" name="debug-output" value="transfer" onchange="triggerRendering();">Transfer Function</div>
+      <div><input type="radio" name="debug-output" value="transfer" onchange="triggerRendering();">Transfer Function
+      </div>
       <div><input type="radio" name="debug-output" value="slice" onchange="triggerRendering();">Volume Slice</div>
-      <div><input type="radio" name="debug-output" value="slice-transfer" onchange="triggerRendering();">Volume Slice with transfer function</div>
+      <div><input type="radio" name="debug-output" value="slice-transfer" onchange="triggerRendering();">Volume Slice
+        with transfer function</div>
+    </div>
   </div>
-</div>
   <!--
     Add some UI elements here to modify the transfer function.  As mentioned above, you need to call the function 'triggerTransferFunctionUpdate' to trigger and update of the GPU representation of the transfer function texture.  If you don't call that function, no change will be visible.
   -->
-  <div>
-    <div>Transferfunction input 1:</div>
-    <div>Color 1<input type="color" id="color1" value="#FF0000" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Opacity:<input type="range" min="0" max="255" value="80" class="slider" id="alpha1" oninput="triggerTransferFunctionUpdate();"></div>
-   
-    <div>Widget 1:<input type="range" min="0" max="255" value="50" class="slider" id="span1" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Range 1:<input type="range" min="1" max="120" value="5" class="slider" id="range1" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Roof 1:<input type="range" min="0" max="1" step="0.01" value="0" class="slider" id="roof1" oninput="triggerTransferFunctionUpdate();"></div>
+  <div style="display:flex; flex-direction:row;">
+    <div style="background-color: white; border-radius: 10px; padding: 10px;margin: 10px;width: 160px;">
+      <div>Transferfunction input 1:</div>
+      <div>Color 1<input type="color" id="color1" value="#FF0000" oninput="triggerTransferFunctionUpdate();"></div>
+      <div>Opacity:<input type="range" min="0" max="255" value="80" class="slider" id="alpha1"
+          oninput="triggerTransferFunctionUpdate();"></div>
+      <div>Widget 1:<input type="range" min="0" max="255" value="50" class="slider" id="span1"
+          oninput="triggerTransferFunctionUpdate();"></div>
+      <div>Range 1:<input type="range" min="1" max="120" value="5" class="slider" id="range1"
+          oninput="triggerTransferFunctionUpdate();"></div>
+      <div>Roof 1:<input type="range" min="0" max="1" step="0.01" value="0" class="slider" id="roof1"
+          oninput="triggerTransferFunctionUpdate();"></div>
+    </div>
+    <div style="background-color: white; border-radius: 10px; padding: 10px; margin: 10px;margin: 10px;width: 160px;">
+      <div>Transferfunction input 2:</div>
+      <div>Color 2<input type="color" id="color2" value="#00FF00" oninput="triggerTransferFunctionUpdate();"></div>
+      <div>Opacity:<input type="range" min="0" max="255" value="80" class="slider" id="alpha2"
+          oninput="triggerTransferFunctionUpdate();"></div>
+      <div>Widget 2:<input type="range" min="0" max="255" value="84" class="slider" id="span2"
+          oninput="triggerTransferFunctionUpdate();"></div>
+      <div>Range 2:<input type="range" min="1" max="120" value="5" class="slider" id="range2"
+          oninput="triggerTransferFunctionUpdate();"></div>
+      <div>Roof 2:<input type="range" min="0" max="1" step="0.01" value="0" class="slider" id="roof2"
+          oninput="triggerTransferFunctionUpdate();"></div>
+    </div>
+    <div style="background-color: white; border-radius: 10px; padding: 10px;margin: 10px;width: 160px;">
+      <div>Transferfunction input 3:</div>
+      <div>Color 3<input type="color" id="color3" value="#0000FF" oninput="triggerTransferFunctionUpdate();"></div>
+      <div>Opacity:<input type="range" min="0" max="255" value="80" class="slider" id="alpha3"
+          oninput="triggerTransferFunctionUpdate();"></div>
+      <div>Widget 3:<input type="range" min="0" max="255" value="138" class="slider" id="span3"
+          oninput="triggerTransferFunctionUpdate();"></div>
+      <div>Range 3:<input type="range" min="1" max="120" value="5" class="slider" id="range3"
+          oninput="triggerTransferFunctionUpdate();"></div>
+      <div>Roof 3:<input type="range" min="0" max="1" step="0.01" value="0" class="slider" id="roof3"
+          oninput="triggerTransferFunctionUpdate();"></div>
+
+    </div>
   </div>
-  <div>
-    <div>Transferfunction input 2:</div>
-    <div>Color 2<input type="color" id="color2" value="#00FF00"oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Opacity:<input type="range" min="0" max="255" value="80" class="slider" id="alpha2" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Widget 2:<input type="range" min="0" max="255" value="84" class="slider" id="span2" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Range 2:<input type="range" min="1" max="120" value="5" class="slider" id="range2" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Roof 2:<input type="range" min="0" max="1" step="0.01" value="0" class="slider" id="roof2" oninput="triggerTransferFunctionUpdate();"></div>
-  </div>
-  <div>
-    
-    <div>Transferfunction input 3:</div>
-    <div>Color 3<input type="color" id="color3" value="#0000FF" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Opacity:<input type="range" min="0" max="255" value="80" class="slider" id="alpha3" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Widget 3:<input type="range" min="0" max="255" value="138" class="slider" id="span3" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Range 3:<input type="range" min="1" max="120" value="5" class="slider" id="range3" oninput="triggerTransferFunctionUpdate();"></div>
-    <div>Roof 3:<input type="range" min="0" max="1" step="0.01" value="0" class="slider" id="roof3" oninput="triggerTransferFunctionUpdate();"></div>
-    
-</div>
 </body>
 
 
